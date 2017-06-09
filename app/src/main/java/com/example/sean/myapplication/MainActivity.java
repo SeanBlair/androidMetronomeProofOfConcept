@@ -52,12 +52,11 @@ public class MainActivity extends AppCompatActivity {
                 MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.beep5);
 
                 while (beepOn) {
-
                     mp.start();
                     try {
                         int timeToSleep = 1000;
                         if (fast) {
-                            timeToSleep = 100;
+                            timeToSleep = 5;
                         }
                         Thread.sleep(timeToSleep);
                     } catch (InterruptedException e) {
@@ -86,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                 (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-                50, 0);
+                12, 0);
     }
 
     public void setVolumeLow(View view) {
@@ -94,6 +93,6 @@ public class MainActivity extends AppCompatActivity {
                 (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-                5, 0);
+                4, 0);
     }
 }
