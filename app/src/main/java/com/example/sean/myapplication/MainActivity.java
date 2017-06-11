@@ -2,6 +2,7 @@ package com.example.sean.myapplication;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -9,16 +10,21 @@ import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_MESSAGE = "com.example.sean.myapplication.MESSAGE";
@@ -28,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
 
     TextView timerTextView;
     long startTime = 0;
+
+    MediaRecorder mediaRecorder = null;
+    boolean isPermissionGranted = false;
+    public static final int RequestPermissionCode = 1;
+    String message = "";
 
     //runs without a timer by reposting this handler at the end of the runnable
     Handler timerHandler = new Handler();
@@ -42,9 +53,94 @@ public class MainActivity extends AppCompatActivity {
 
             timerTextView.setText(String.format("%d:%02d", minutes, seconds));
 
+            // check volume, set output...
+
+            TextView volumeLevel = (TextView) findViewById(R.id.textView3);
+
+            int volume = getAmbientVolume();
+            volumeLevel.setText("mediaRecorder is: " + message + "\nvolume: " + volume);
+
+            // close all recording abjects, to purge memory...
+//            stopRecording();
+
+
+            // start recording
+            startRecording();
+
             timerHandler.postDelayed(this, 500);
         }
     };
+
+    private void startRecording() {
+        getMicrophonePermission();
+        if (mediaRecorder == null) {
+            mediaRecorder = new MediaRecorder();
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mediaRecorder.setOutputFile("/dev/null");
+            try {
+                mediaRecorder.prepare();
+                mediaRecorder.start();
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void getMicrophonePermission() {
+        if (!isPermissionGranted) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, RequestPermissionCode);
+            isPermissionGranted = checkPermission();
+        }
+    }
+
+    public boolean checkPermission() {
+        int result = ContextCompat.checkSelfPermission(getApplicationContext(),
+                RECORD_AUDIO);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case RequestPermissionCode:
+                if (grantResults.length> 0) {
+                    boolean RecordPermission = grantResults[0] ==
+                            PackageManager.PERMISSION_GRANTED;
+
+                    if (RecordPermission) {
+                        Toast.makeText(MainActivity.this, "Permission Granted",
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(MainActivity.this,"Permission Denied",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+                break;
+        }
+    }
+
+    private void stopRecording() {
+        if (mediaRecorder != null) {
+            mediaRecorder.stop();
+            mediaRecorder.release();
+            mediaRecorder = null;
+        }
+    }
+
+    private int getAmbientVolume() {
+        if (mediaRecorder == null) {
+            message = "isNull....";
+            return 0;
+        } else {
+            message = "is not Null";
+            return mediaRecorder.getMaxAmplitude();
+        }
+    }
 
 
     @Override
