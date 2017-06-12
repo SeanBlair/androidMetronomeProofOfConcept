@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int RequestPermissionCode = 1;
     String message = "";
 
+    int ambientVolume = 0;
+
     //runs without a timer by reposting this handler at the end of the runnable
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
@@ -57,8 +59,9 @@ public class MainActivity extends AppCompatActivity {
 
             TextView volumeLevel = (TextView) findViewById(R.id.textView3);
 
-            int volume = getAmbientVolume();
-            volumeLevel.setText("mediaRecorder is: " + message + "\nvolume: " + volume);
+            ambientVolume = getAmbientVolume();
+            setOutputVolume();
+            volumeLevel.setText("mediaRecorder is: " + message + "\nambientVolume: " + ambientVolume);
 
             // close all recording abjects, to purge memory...
 //            stopRecording();
@@ -70,6 +73,49 @@ public class MainActivity extends AppCompatActivity {
             timerHandler.postDelayed(this, 500);
         }
     };
+
+    private void setOutputVolume() {
+        int volume = getOutputVolume();
+        AudioManager audioManager =
+                (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                volume, 0);
+    }
+
+    private int getOutputVolume() {
+        int level;
+        if (ambientVolume < 100) {
+            level = 1;
+        } else if (ambientVolume < 200) {
+            level = 2;
+        } else if (ambientVolume < 500) {
+            level = 3;
+        } else if (ambientVolume < 1000) {
+            level = 4;
+        } else if (ambientVolume < 2000) {
+            level = 6;
+        } else if (ambientVolume < 3000) {
+            level = 7;
+        } else if (ambientVolume < 4000) {
+            level = 8;
+        } else if (ambientVolume < 5000) {
+            level = 9;
+        } else if (ambientVolume < 6000) {
+            level = 10;
+        } else if (ambientVolume < 7000) {
+            level = 11;
+        } else if (ambientVolume < 8000) {
+            level = 12;
+        } else if (ambientVolume < 9000) {
+            level = 13;
+        } else if (ambientVolume < 1000) {
+            level = 14;
+        } else {
+            level = 15;
+        }
+        return level;
+    }
 
     private void startRecording() {
         getMicrophonePermission();
@@ -237,42 +283,5 @@ public class MainActivity extends AppCompatActivity {
 
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
                 4, 0);
-    }
-
-    public void getAmbientLevel(View view) {
-
-//        int amplitude = 0;
-//        TextView textView = (TextView) findViewById(R.id.textView2);
-//        textView.setText("level is: " + amplitude);
-//
-//        MediaRecorder mediaRecorder = new MediaRecorder();
-//        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-
-//        try {
-//            // Start recording but don't store data
-//            MediaRecorder mediaRecorder = new MediaRecorder();
-//            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-//            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-//            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-//            mediaRecorder.setOutputFile("/dev/null");
-//            mediaRecorder.prepare();
-//            mediaRecorder.start();
-//
-//
-//
-//            // Obtain maximum amplitude since last call of getMaxAmplitude()
-////            while(true) {
-////                int amplitude = mediaRecorder.getMaxAmplitude();
-////                TextView textView = (TextView) findViewById(R.id.textView2);
-////                textView.setText("level is: " + amplitude);
-////            }
-//
-//            // Don't forget to release
-//            mediaRecorder.reset();
-//            mediaRecorder.release();
-//        } catch (IOException e) {
-//            android.util.Log.e("RecordingNoise", "Exception", e);
-//        }
-
     }
 }
