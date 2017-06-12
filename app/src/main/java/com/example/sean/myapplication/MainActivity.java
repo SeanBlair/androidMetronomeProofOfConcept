@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     String message = "";
 
     int ambientVolume = 0;
+    int silencesToRepeat = 9;
 
     //runs without a timer by reposting this handler at the end of the runnable
     Handler timerHandler = new Handler();
@@ -180,10 +181,8 @@ public class MainActivity extends AppCompatActivity {
 
     private int getAmbientVolume() {
         if (mediaRecorder == null) {
-            message = "isNull....";
             return 0;
         } else {
-            message = "is not Null";
             return mediaRecorder.getMaxAmplitude();
         }
     }
@@ -238,19 +237,32 @@ public class MainActivity extends AppCompatActivity {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
 
-                MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.beep5);
+                final MediaPlayer click = MediaPlayer.create(getApplicationContext(), R.raw.click100ms);
+                final MediaPlayer silence = MediaPlayer.create(getApplicationContext(), R.raw.silence100ms);
+                final int[] numSilences = {silencesToRepeat};
 
-                while (beepOn) {
-                    mp.start();
-                    try {
-                        int timeToSleep = 1000;
-                        if (fast) {
-                            timeToSleep = 5;
-                        }
-                        Thread.sleep(timeToSleep);
-                    } catch (InterruptedException e) {
+                click.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        silence.start();
                     }
-                }
+                });
+
+                silence.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        if (numSilences[0] > 0) {
+                            numSilences[0] = numSilences[0] - 1;
+                            silence.start();
+                        } else {
+                            numSilences[0] = silencesToRepeat;
+                            click.start();
+                        }
+                    }
+                });
+
+                click.start();
+
             }
         });
 
