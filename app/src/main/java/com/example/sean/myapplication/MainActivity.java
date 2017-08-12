@@ -41,39 +41,39 @@ public class MainActivity extends AppCompatActivity {
     String message = "";
 
     int ambientVolume = 0;
-    int silencesToRepeat = 9;
+    int silencesToRepeat = 2;
 
     //runs without a timer by reposting this handler at the end of the runnable
-    Handler timerHandler = new Handler();
-    Runnable timerRunnable = new Runnable() {
-
-        @Override
-        public void run() {
-            long millis = System.currentTimeMillis() - startTime;
-            int seconds = (int) (millis / 1000);
-            int minutes = seconds / 60;
-            seconds = seconds % 60;
-
-            timerTextView.setText(String.format("%d:%02d", minutes, seconds));
-
-            // check volume, set output...
-
-            TextView volumeLevel = (TextView) findViewById(R.id.textView3);
-
-            ambientVolume = getAmbientVolume();
-            setOutputVolume();
-            volumeLevel.setText("mediaRecorder is: " + message + "\nambientVolume: " + ambientVolume);
-
-            // close all recording abjects, to purge memory...
-//            stopRecording();
-
-
-            // start recording
-            startRecording();
-
-            timerHandler.postDelayed(this, 500);
-        }
-    };
+//    Handler timerHandler = new Handler();
+//    Runnable timerRunnable = new Runnable() {
+//
+//        @Override
+//        public void run() {
+//            long millis = System.currentTimeMillis() - startTime;
+//            int seconds = (int) (millis / 1000);
+//            int minutes = seconds / 60;
+//            seconds = seconds % 60;
+//
+//            timerTextView.setText(String.format("%d:%02d", minutes, seconds));
+//
+//            // check volume, set output...
+//
+//            TextView volumeLevel = (TextView) findViewById(R.id.textView3);
+//
+//            ambientVolume = getAmbientVolume();
+//            setOutputVolume();
+//            volumeLevel.setText("mediaRecorder is: " + message + "\nambientVolume: " + ambientVolume);
+//
+//            // close all recording abjects, to purge memory...
+////            stopRecording();
+//
+//
+//            // start recording
+//            startRecording();
+//
+//            timerHandler.postDelayed(this, 500);
+//        }
+//    };
 
     private void setOutputVolume() {
         int volume = getOutputVolume();
@@ -86,31 +86,23 @@ public class MainActivity extends AppCompatActivity {
 
     private int getOutputVolume() {
         int level;
-        if (ambientVolume < 100) {
-            level = 1;
-        } else if (ambientVolume < 200) {
-            level = 2;
-        } else if (ambientVolume < 500) {
-            level = 3;
-        } else if (ambientVolume < 1000) {
-            level = 4;
-        } else if (ambientVolume < 2000) {
+        if (ambientVolume < 2000) {
             level = 6;
-        } else if (ambientVolume < 3000) {
-            level = 7;
         } else if (ambientVolume < 4000) {
-            level = 8;
-        } else if (ambientVolume < 5000) {
-            level = 9;
+            level = 7;
         } else if (ambientVolume < 6000) {
-            level = 10;
+            level = 8;
         } else if (ambientVolume < 7000) {
-            level = 11;
+            level = 9;
         } else if (ambientVolume < 8000) {
-            level = 12;
+            level = 10;
         } else if (ambientVolume < 9000) {
+            level = 11;
+        } else if (ambientVolume < 10000) {
+            level = 12;
+        } else if (ambientVolume < 11000) {
             level = 13;
-        } else if (ambientVolume < 1000) {
+        } else if (ambientVolume < 14000) {
             level = 14;
         } else {
             level = 15;
@@ -181,8 +173,10 @@ public class MainActivity extends AppCompatActivity {
 
     private int getAmbientVolume() {
         if (mediaRecorder == null) {
+            message = "null";
             return 0;
         } else {
+            message = "not null";
             return mediaRecorder.getMaxAmplitude();
         }
     }
@@ -194,24 +188,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         timerTextView = (TextView) findViewById(R.id.textView2);
-
-        Button b = (Button) findViewById(R.id.button8);
-        b.setText("start");
-        b.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                Button b = (Button) v;
-                if (b.getText().equals("stop")) {
-                    timerHandler.removeCallbacks(timerRunnable);
-                    b.setText("start");
-                } else {
-                    startTime = System.currentTimeMillis();
-                    timerHandler.postDelayed(timerRunnable, 0);
-                    b.setText("stop");
-                }
-            }
-        });
     }
 
     /** Called when the user taps the Send button */
@@ -237,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
 
-                final MediaPlayer click = MediaPlayer.create(getApplicationContext(), R.raw.click100ms);
+                final MediaPlayer click = MediaPlayer.create(getApplicationContext(), R.raw.click100msloud);
                 final MediaPlayer silence = MediaPlayer.create(getApplicationContext(), R.raw.silence100ms);
                 final int[] numSilences = {silencesToRepeat};
 
@@ -251,18 +227,31 @@ public class MainActivity extends AppCompatActivity {
                 silence.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
+
+                        TextView volumeLevel = (TextView) findViewById(R.id.textView3);
+
                         if (numSilences[0] > 0) {
+                            if (numSilences[0] == 2) {
+                                ambientVolume = getAmbientVolume();
+                            }
                             numSilences[0] = numSilences[0] - 1;
                             silence.start();
                         } else {
                             numSilences[0] = silencesToRepeat;
-                            click.start();
+                            if (beepOn) {
+                                ambientVolume = getAmbientVolume();
+                                setOutputVolume();
+                                volumeLevel.setText("\nmediaRecorder is: " + message + "\nambientVolume: " + ambientVolume);
+//                                ambientVolume = 0;
+                                click.start();
+                            }
                         }
+
                     }
                 });
 
                 click.start();
-
+                startRecording();
             }
         });
 
